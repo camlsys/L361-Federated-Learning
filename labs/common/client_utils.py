@@ -94,7 +94,6 @@ def train_FEMNIST(
         float: the final epoch mean train loss.
     """
    
-   
     net.train()
     running_loss, total = 0.0, 0
     for _ in range(epochs):
@@ -134,10 +133,6 @@ def test_FEMNIST(
     Returns:
         Tuple[float, float]: couple of average test loss and average accuracy on the test set.
     """
-    if "max_batches" in kwargs:
-        max_batches = kwargs["max_batches"]
-    else:
-        max_batches = None
 
     batch_cnt = 0
     correct, total, loss = 0, 0, 0.0
