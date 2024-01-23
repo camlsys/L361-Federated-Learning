@@ -27,7 +27,7 @@ from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
 from tqdm import tqdm
 
-from femnist_dataset import FEMNIST
+from common.femnist_dataset import FEMNIST
 
 
 # Load with appropriate transforms
