@@ -1,0 +1,68 @@
+- **To get a good mark, you must  follow the Research Project Guidelines we provide in the separate pdf; any document not conforming to those standards will be harshly treated.**
+- Potential Datasets:
+    - Low resource: MNIST, SHAKESPEARE (Naturally partitioned), FEMNIST (Naturally partitioned)
+    - Medium Resources: CIFAR-10, CIFAR-100, SVHN
+    - High Resources: OpenImages (Naturally partitioned) , Google Speech (Naturally partitioned)
+    - Very-high Resources: Fed-C4 or Fed-The-Pile (randomly partitioned → cross-silo or Dataset Grouper)
+- Models:
+    - Initialization with pre-trained weights is allowed and encouraged.
+    - It is particularly encouraged if you do not have large computational resources specifically because it allows you to focus on single-round behaviour in a meaningful sense without waiting for model convergence and it makes it more likely you will not have to do huge amounts of local training on each client.
+        - If pre-trained weights are used, this should be taken into account in the analysis explicitly and accounted for when drawing any conclusions.
+        - Experimental checking for the impact of pre-trained weights is also encouraged, but not required, when time allows, for example:
+            - If you are testing an aggregation algorithm, you can try to understand the impact of aggregation on one round when training a small pool of clients with different interpolations of randomly initialised and pre-trained weights using the following equation with a reasonably chosen small number of interpolation parameters: $\alpha * \theta_{p} + (1-\alpha) \theta_r$
+            - Where $\theta_p$ are the pre-trained weights and $\theta_r$ are the randomly initialised ones
+- General Recommendations:
+    - Start with single-round effects, help yourselves by playing with the learning rate and number of local epochs, and move onto full training after checking weather the hypotheses align with the single-round results.
+    - You are encouraged to explore significantly varied hyperparameter values when investigating single-round effects, and, if you have time, to do the same for overall training either at random, based on your intuition, or on promising single-round results.
+    - If there are any errors in the flower implementations of FL algorithms, let the teaching assistants know and you will be allocated another project.
+- Allocation method: round-robin allocation to all students, no choice permitted. Multiple students will create a lab report on the same method concomitantly.
+- MPhil/Part III:
+    - **Lab Report on FedOPT**:
+        - [Link](https://github.com/adap/flower/blob/main/src/py/flwr/server/strategy/fedopt.py)
+        - [Paper](https://arxiv.org/pdf/2003.00295.pdf)
+        - Insights into **: federated momentum mechanisms**
+        - **Experimental hypotheses: all of these can be validated or invalidated**
+            - *All FedOPT variants improve the stability of the optimization direction that the federated model follows over FedAvg.*
+            - *FedAdam provides the most stable optimization direction.*
+            - *If momentum is not applied (neither $m_t$ nor $v_t$ are used),* *increasing the number of clients aggregated in one round leads to the norm of the pseudo-gradient scaling following an inverse square—root law.  However, FedOPT provides a degree of scale-invariance w.r.t the number of clients participating in a round.*
+        - Recommendations:
+            - The techniques you will need here are largely the same as the ones applied in the first lab, relying  on inner products or cosine similarities to determine the informativeness/direction of updates relative to the final model/ a pretrained model/ a centralized model/ FedAvg model/whatever other baseline you choose.
+            - You should explicitly track $m_t$  and $v_t$ both in single-round experiments and during the course of the whole training as they may help explain observed effects.
+    - **Lab Report on FedMedian**:
+        - [Link](https://github.com/adap/flower/blob/main/src/py/flwr/server/strategy/fedmedian.py)
+        - [Paper](https://www.notion.so/Ring-Allreduce-30a7f8765cea4808b552eb0154813835?pvs=21)
+        - Insights into **: robust aggregation**
+        - **Experimental hypotheses: all of these can be validated or invalidated**
+            - *FedMedian* is *highly resilient to simple poisoning attacks.*
+            - *FedMedian converges slower than FedAvg*
+            - *Using other statistical estimators than the median  makes the algorithm more vulnerable to simple poisoning attacks but may improve the speed of convergence.*
+                - E.g: the mean or trimean
+        - Recommendations:
+            - To evaluate resilience against poisoning attacks, you can try some of the following
+                - Try simply setting client models to have all weights as inf or -inf for increasing percentage of the client population.
+                - Try more sophisticated behaviour were clients do data-driven poisoning like label flipping
+            - To evaluate convergence, track the direction of the FedMedian pseudo-gradient across multiple rounds compared to a well-chosen baseline like a centralized/pre-trained or FedAvg model and do not rely on accuracy if you do not have the compute necessary to train a good model.
+    - **Lab Report on FedPer**:
+        - [Link](https://github.com/adap/flower/blob/main/baselines/fedper/fedper/strategy.py)
+        - [Paper](https://arxiv.org/abs/1912.00818)
+        - Insights into **: personalization**
+        - **Experimental hypotheses: all of these can be validated or invalidated**
+            - **************************When using standard FedAvg, during the course of a single round clients produce model updates which are more simillar in their early embedding layers than their late ones.**************************
+            - *When using FedPer, the divergence of personalized layers across multiple epochs in the same round is proportional to the degree of hetereogeneity of the client data distribution.*
+            - *When using FedPer, the personalized layers diverge less across in one round and across rounds than they would have had clients trained fully locally for a number of epochs equal to the product of the number of rounds and number of epochs per round.*
+        - Recommendations:
+            - Simillarly to FedOPT, this mostly requires tools available to you from the first lab such as inner products and cosine similarity.
+            - You may also consider other interesting similarity metrics like the divergence between the activations of specific layers given a source of data .
+                - For example, you may want to consider how the personalization layers versus base layers behave for in-distribution samples (data from the afferent client) and out-of-distribution samples (data drawn from the distributions of the other clients).
+    - **Lab report on Momentum and Iterative Moving Averaging (IMA) in FL**:
+        - [Link](https://github.com/adap/flower/blob/main/src/py/flwr/server/strategy/fedopt.py)
+        - [Paper](https://arxiv.org/pdf/2003.00295.pdf)
+        - [Second paper](https://arxiv.org/pdf/2305.07845.pdf)
+        - Insights into **: momentum in FL and iterative averaging techniques**
+        - **Experimental hypotheses: all of these can be validated or invalidated**
+            - *When using FedAvg, averaging weights from multiple rounds improves the stability of the optimization direction that the federated model follows, especially in scenarios with low or varying participation scenarios.*
+            - *Models trained with a version of FedOPT show less benefit from IMA because $m_t$ and $v_t$ already serve to stabilize them.*
+            - *Applying IMA over $m_t$ and*/or *$v_t$ provides improvements over standard FedOPT in terms of the stability of the optimization direction that the federated model follows.*
+        - Recommendations:
+            - Experiments here may show very different results depending on the heterogeneity of client data distributions or client participation rates so this part of the experimental design is most important.
+            - Similar techniques to the FedOpt lab report apply.
