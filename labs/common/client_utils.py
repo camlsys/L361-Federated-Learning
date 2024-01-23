@@ -15,7 +15,7 @@ import numbers
 from collections import OrderedDict, defaultdict
 from copy import deepcopy
 from pathlib import Path
-from typing import Any, Tuple, Callable, List, Dict
+from typing import Any, Optional, Tuple, Callable, List, Dict
 
 import numpy as np
 import torch
@@ -77,6 +77,7 @@ def train_FEMNIST(
     device: str,
     optimizer: torch.optim.Optimizer,
     criterion: Module,
+    max_batches: Optional[int] = None,
     **kwargs,
 ) -> float:
     """Trains the network on the training set.
@@ -92,10 +93,8 @@ def train_FEMNIST(
     Returns:
         float: the final epoch mean train loss.
     """
-    if "max_batches" in kwargs:
-        max_batches = kwargs["max_batches"]
-    else:
-        max_batches = None
+   
+   
     net.train()
     running_loss, total = 0.0, 0
     for _ in range(epochs):
@@ -121,6 +120,7 @@ def test_FEMNIST(
     test_loader: DataLoader,
     device: str,
     criterion: Module,
+    max_batches: Optional[int] = None,
     **kwargs,
 ) -> Tuple[float, float]:
     """Validate the network on a test set.
