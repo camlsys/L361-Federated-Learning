@@ -72,7 +72,7 @@ class FlowerClient(fl.client.NumPyClient):
         net = self.model_generator()
         return set_model_parameters(net, parameters)
 
-    def get_parameters(self, config: dict[int, Scalar]) -> NDArrays:
+    def get_parameters(self, config: dict[str, Scalar]) -> NDArrays:
         """Return weights from a given model.
 
         If no model is passed, then a local model is created.
