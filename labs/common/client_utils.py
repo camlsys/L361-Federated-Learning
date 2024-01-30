@@ -362,11 +362,9 @@ def get_federated_evaluation_function(
 
     log(
         logging.INFO,
-        "Reduced federated test_set size from ",
+        "Reduced federated test_set size from %s to a size of %s mean index: %s",
         num_samples,
-        " to a size of ",
         len(cast(Sized, dataset)),
-        " mean index:",
         np.mean(index_list),
     )
 
