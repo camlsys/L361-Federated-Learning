@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+"""Client utilities for the FEMNIST dataset."""
 
 # @File    :   client.py
 # @Time    :   2023/01/21 11:36:46
@@ -153,11 +153,13 @@ def test_FEMNIST(  # noqa: N802
 
     Returns
     -------
-        tuple[float, float]: couple of average test loss and average accuracy on the test set.
+        tuple[float, float]:
+            couple of average test loss and average accuracy on the test set.
     """
     batch_cnt = 0
     correct, total, loss = 0, 0, 0.0
     net.eval()
+
     with torch.no_grad():
         for data, labels in tqdm(test_loader):
 
@@ -241,7 +243,7 @@ class MLP(nn.Module):
 
 # All experiments will have the exact same initialization.
 # All differences in performance will come from training
-def get_network_generator_cnn() -> Callable[[], Module]:
+def get_network_generator_cnn() -> Callable[[], Net]:
     """Get function to generate a new CNN model."""
     untrained_net: Net = Net()
 
@@ -253,7 +255,7 @@ def get_network_generator_cnn() -> Callable[[], Module]:
 
 # All experiments will have the exact same initialization.
 # All differences in performance will come from training
-def get_network_generator_mlp() -> Callable[[], Module]:
+def get_network_generator_mlp() -> Callable[[], MLP]:
     """Get function to generate a new MLP model."""
     untrained_net: MLP = MLP()
 
@@ -345,11 +347,12 @@ def get_federated_evaluation_function(
         batch_size (int): batch size of the test set to use.
         num_workers (int): correspond to `num_workers` param in the Dataloader object.
         model_generator (Callable[[], Module]):  model generator function.
-        criterion (Module): PyTorch Module containing the criterion for evaluating the model.
+        criterion (Module): PyTorch Module containing the criterion.
 
     Returns
     -------
-        Callable[[int, NDArrays, dict[str, Any]], tuple[float, dict[str, Scalar]]]: external federated evaluation function.
+        Callable[[int, NDArrays, dict[str, Any]], tuple[float, dict[str, Scalar]]]:
+            external federated evaluation function.
     """
     full_file: Path = centralized_mapping
     dataset: Dataset = load_FEMNIST_dataset(data_dir, full_file, "val")
@@ -412,6 +415,7 @@ def get_federated_evaluation_function(
 
 
 def get_default_train_config() -> dict[str, Any]:
+    """Get default training configuration."""
     return {
         "epochs": 8,
         "batch_size": 32,
@@ -423,6 +427,7 @@ def get_default_train_config() -> dict[str, Any]:
 
 
 def get_default_test_config() -> dict[str, Any]:
+    """Get default testing configuration."""
     return {
         "batch_size": 32,
         "num_workers": 0,

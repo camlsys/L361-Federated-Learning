@@ -10,6 +10,8 @@ exclude: |
                 dev/|
                 data/|
                 run_scripts/|
+                labs/L361_Lab_1_From_Centralised_To_Federated_Part_1.ipynb|
+                labs/L361_Lab_2_From_Centralised_To_Federated_Part_2.ipynb|
                 .pre-commit-config.yaml
   )$
 
