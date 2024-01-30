@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+"""Module to load the FEMNIST dataset."""
 
 # @File    :   client.py
 # @Time    :   2023/01/21 11:36:46
@@ -21,6 +21,8 @@ from torch.utils.data import Dataset
 
 
 class FEMNIST(Dataset):
+    """Class to load the FEMNIST dataset."""
+
     def __init__(
         self,
         mapping: Path,
@@ -28,15 +30,17 @@ class FEMNIST(Dataset):
         name: str = "train",
         transform: Callable[[ImageType], Any] | None = None,
         target_transform: Callable[[int], Any] | None = None,
-    ):
-        """Function to initialize the FEMNIST dataset.
+    ) -> None:
+        """Initialize the FEMNIST dataset.
 
         Args:
             mapping (Path): path to the mapping folder containing the .csv files.
             data_dir (Path): path to the dataset folder. Defaults to data_dir.
             name (str): name of the dataset to load, train or test.
-            transform (Optional[Callable[[ImageType], Any]], optional): transform function to be applied to the ImageType object. Defaults to None.
-            target_transform (Optional[Callable[[int], Any]], optional): transform function to be applied to the label. Defaults to None.
+            transform (Optional[Callable[[ImageType], Any]], optional):
+                    transform function to be applied to the ImageType object.
+            target_transform (Optional[Callable[[int], Any]], optional):
+                    transform function to be applied to the label.
         """
         self.data_dir = data_dir
         self.mapping = mapping
@@ -46,8 +50,8 @@ class FEMNIST(Dataset):
         self.transform: Callable[[ImageType], Any] | None = transform
         self.target_transform: Callable[[int], Any] | None = target_transform
 
-    def __getitem__(self, index) -> tuple[Any, Any]:
-        """Function used by PyTorch to get a sample.
+    def __getitem__(self, index: int) -> tuple[Any, Any]:
+        """Get a sample.
 
         Args:
             index (_type_): index of the sample.
@@ -72,7 +76,7 @@ class FEMNIST(Dataset):
         return img, label
 
     def __len__(self) -> int:
-        """Function used by PyTorch to get the length of the dataset as number of samples.
+        """Get the length of the dataset as number of samples.
 
         Returns
         -------
@@ -81,7 +85,8 @@ class FEMNIST(Dataset):
         return len(self.data)
 
     def _load_dataset(self) -> Sequence[tuple[str, int]]:
-        """Load the paths and labels of the partition
+        """Load the paths and labels of the partition.
+
         Preprocess the dataset for faster future loading
         If opened for the first time
 
@@ -91,7 +96,8 @@ class FEMNIST(Dataset):
 
         Returns
         -------
-            Sequence[Tuple[str, int]]: partition asked as a sequence of couples (path_to_file, label)
+            Sequence[Tuple[str, int]]:
+                partition asked as a sequence of couples (path_to_file, label)
         """
         preprocessed_path: Path = (self.mapping / self.name).with_suffix(".pt")
         if preprocessed_path.exists():
@@ -100,18 +106,18 @@ class FEMNIST(Dataset):
             csv_path = (self.mapping / self.name).with_suffix(".csv")
             if not csv_path.exists():
                 raise ValueError(f"Required files do not exist, path: {csv_path}")
-            else:
-                with open(csv_path) as csv_file:
-                    csv_reader = csv.reader(csv_file)
-                    # Ignore header
-                    next(csv_reader)
 
-                    # Extract the samples and the labels
-                    partition: Sequence[tuple[str, int]] = [
-                        (sample_path, int(label_id))
-                        for _, sample_path, _, label_id in csv_reader
-                    ]
+            with open(csv_path) as csv_file:
+                csv_reader = csv.reader(csv_file)
+                # Ignore header
+                next(csv_reader)
 
-                    # Save for future loading
-                    torch.save(partition, preprocessed_path)
-                    return partition
+                # Extract the samples and the labels
+                partition: Sequence[tuple[str, int]] = [
+                    (sample_path, int(label_id))
+                    for _, sample_path, _, label_id in csv_reader
+                ]
+
+                # Save for future loading
+                torch.save(partition, preprocessed_path)
+                return partition

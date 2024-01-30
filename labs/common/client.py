@@ -1,3 +1,5 @@
+"""Flower client for PyTorch."""
+
 # @File    :   client.py
 # @Time    :   2023/01/21 11:36:46
 # @Author  :   Alexandru-Andrei Iacob
