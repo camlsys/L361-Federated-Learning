@@ -17,7 +17,7 @@
     - If there are any errors in the flower implementations of FL algorithms, let the teaching assistants know and you will be allocated another project.
 - Allocation method: round-robin allocation to all students, no choice permitted. Multiple students will create a lab report on the same method concomitantly.
 - MPhil/Part III:
-    - **Lab Report on FedOPT**:
+    - Project 0: **Lab Report on FedOPT**:
         - [Link](https://github.com/adap/flower/blob/main/src/py/flwr/server/strategy/fedopt.py)
         - [Paper](https://arxiv.org/pdf/2003.00295.pdf)
         - Insights into **: federated momentum mechanisms**
@@ -28,7 +28,7 @@
         - Recommendations:
             - The techniques you will need here are largely the same as the ones applied in the first lab, relying  on inner products or cosine similarities to determine the informativeness/direction of updates relative to the final model/ a pretrained model/ a centralized model/ FedAvg model/whatever other baseline you choose.
             - You should explicitly track $m_t$  and $v_t$ both in single-round experiments and during the course of the whole training as they may help explain observed effects.
-    - **Lab Report on FedMedian**:
+    - Project 1: **Lab Report on FedMedian**:
         - [Link](https://github.com/adap/flower/blob/main/src/py/flwr/server/strategy/fedmedian.py)
         - [Paper](https://www.notion.so/Ring-Allreduce-30a7f8765cea4808b552eb0154813835?pvs=21)
         - Insights into **: robust aggregation**
@@ -42,7 +42,7 @@
                 - Try simply setting client models to have all weights as inf or -inf for increasing percentage of the client population.
                 - Try more sophisticated behaviour were clients do data-driven poisoning like label flipping
             - To evaluate convergence, track the direction of the FedMedian pseudo-gradient across multiple rounds compared to a well-chosen baseline like a centralized/pre-trained or FedAvg model and do not rely on accuracy if you do not have the compute necessary to train a good model.
-    - **Lab Report on FedPer**:
+    - Project 2: **Lab Report on FedPer**:
         - [Link](https://github.com/adap/flower/blob/main/baselines/fedper/fedper/strategy.py)
         - [Paper](https://arxiv.org/abs/1912.00818)
         - Insights into **: personalization**
@@ -54,7 +54,7 @@
             - Simillarly to FedOPT, this mostly requires tools available to you from the first lab such as inner products and cosine similarity.
             - You may also consider other interesting similarity metrics like the divergence between the activations of specific layers given a source of data .
                 - For example, you may want to consider how the personalization layers versus base layers behave for in-distribution samples (data from the afferent client) and out-of-distribution samples (data drawn from the distributions of the other clients).
-    - **Lab report on Momentum and Iterative Moving Averaging (IMA) in FL**:
+    - Project 3: **Lab report on Momentum and Iterative Moving Averaging (IMA) in FL**:
         - [Link](https://github.com/adap/flower/blob/main/src/py/flwr/server/strategy/fedopt.py)
         - [Paper](https://arxiv.org/pdf/2003.00295.pdf)
         - [Second paper](https://arxiv.org/pdf/2305.07845.pdf)
