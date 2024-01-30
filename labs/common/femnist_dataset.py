@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*-coding:utf-8 -*-
 
 # @File    :   client.py
 # @Time    :   2023/01/21 11:36:46
@@ -13,20 +12,22 @@
 
 import csv
 from pathlib import Path
-from typing import Any, Optional, Callable, Sequence, Tuple
+from typing import Any
+from collections.abc import Callable, Sequence
 import torch
 from PIL import Image
 from PIL.Image import Image as ImageType
 from torch.utils.data import Dataset
+
 
 class FEMNIST(Dataset):
     def __init__(
         self,
         mapping: Path,
         data_dir: Path,
-        name: str = 'train',
-        transform: Optional[Callable[[ImageType], Any]] = None,
-        target_transform: Optional[Callable[[int], Any]] = None,
+        name: str = "train",
+        transform: Callable[[ImageType], Any] | None = None,
+        target_transform: Callable[[int], Any] | None = None,
     ):
         """Function to initialize the FEMNIST dataset.
 
@@ -41,17 +42,18 @@ class FEMNIST(Dataset):
         self.mapping = mapping
         self.name = name
 
-        self.data: Sequence[Tuple[str, int]] = self._load_dataset()
-        self.transform: Optional[Callable[[ImageType], Any]] = transform
-        self.target_transform: Optional[Callable[[int], Any]] = target_transform
+        self.data: Sequence[tuple[str, int]] = self._load_dataset()
+        self.transform: Callable[[ImageType], Any] | None = transform
+        self.target_transform: Callable[[int], Any] | None = target_transform
 
-    def __getitem__(self, index) -> Tuple[Any, Any]:
+    def __getitem__(self, index) -> tuple[Any, Any]:
         """Function used by PyTorch to get a sample.
 
         Args:
             index (_type_): index of the sample.
 
-        Returns:
+        Returns
+        -------
             Tuple[Any, Any]: couple (sample, label).
         """
         sample_path, label = self.data[index]
@@ -72,37 +74,40 @@ class FEMNIST(Dataset):
     def __len__(self) -> int:
         """Function used by PyTorch to get the length of the dataset as number of samples.
 
-        Returns:
+        Returns
+        -------
             int: the length of the dataset.
         """
         return len(self.data)
-    
-    def _load_dataset(self) -> Sequence[Tuple[str, int]]:
+
+    def _load_dataset(self) -> Sequence[tuple[str, int]]:
         """Load the paths and labels of the partition
         Preprocess the dataset for faster future loading
         If opened for the first time
 
-        Raises:
+        Raises
+        ------
             ValueError: raised if the mapping file doesn't exists
 
-        Returns:
+        Returns
+        -------
             Sequence[Tuple[str, int]]: partition asked as a sequence of couples (path_to_file, label)
         """
-        preprocessed_path: Path = (self.mapping/self.name).with_suffix(".pt")
+        preprocessed_path: Path = (self.mapping / self.name).with_suffix(".pt")
         if preprocessed_path.exists():
             return torch.load(preprocessed_path)
         else:
-            csv_path = (self.mapping/self.name).with_suffix(".csv")
+            csv_path = (self.mapping / self.name).with_suffix(".csv")
             if not csv_path.exists():
                 raise ValueError(f"Required files do not exist, path: {csv_path}")
             else:
-                with open(csv_path, mode="r") as csv_file:
+                with open(csv_path) as csv_file:
                     csv_reader = csv.reader(csv_file)
                     # Ignore header
                     next(csv_reader)
 
                     # Extract the samples and the labels
-                    partition: Sequence[Tuple[str, int]] = [
+                    partition: Sequence[tuple[str, int]] = [
                         (sample_path, int(label_id))
                         for _, sample_path, _, label_id in csv_reader
                     ]

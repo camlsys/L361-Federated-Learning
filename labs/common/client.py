@@ -9,8 +9,9 @@
 # @Desc    :   None
 
 from pathlib import Path
-from collections.abc import Callable
+from collections.abc import Callable, Sized
 from logging import INFO
+from typing import cast
 
 import flwr as fl
 import torch
@@ -19,13 +20,15 @@ from flwr.common.logger import log
 from torch.nn import Module
 from torch.utils.data import DataLoader, Dataset
 
-from client_utils import (
+from common.client_utils import (
     get_model_parameters,
     set_model_parameters,
     load_FEMNIST_dataset,
     train_FEMNIST,
     test_FEMNIST,
+    get_device,
 )
+
 
 class FlowerClient(fl.client.NumPyClient):
     """A client for Flower using PyTorch."""
@@ -52,9 +55,7 @@ class FlowerClient(fl.client.NumPyClient):
         log(INFO, "Creating client with cid: %s", self.cid)
         self.partition_dir = partition_dir
         self.data_dir = data_dir
-        self.device = str(
-            torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        )
+        self.device = get_device()
         self.model_generator: Callable[[], Module] = model_generator
         self.properties: dict[str, Scalar] = {"tensor_type": "numpy.ndarray"}
 
@@ -181,7 +182,7 @@ class FlowerClient(fl.client.NumPyClient):
                 weight_decay=float(config["weight_decay"]),
             ),
             criterion=torch.nn.CrossEntropyLoss(),
-            max_batches=config["max_batches"],
+            max_batches=cast(int | None, config["max_batches"]),
         )
 
     def _test(
@@ -192,7 +193,7 @@ class FlowerClient(fl.client.NumPyClient):
             test_loader=test_loader,
             device=self.device,
             criterion=torch.nn.CrossEntropyLoss(),
-            max_batches=config["max_batches"],
+            max_batches=cast(int | None, config["max_batches"]),
         )
 
     def get_properties(self, config: dict[str, Scalar]) -> dict[str, Scalar]:
@@ -210,22 +211,23 @@ class FlowerClient(fl.client.NumPyClient):
         return self.properties
 
     def get_train_set_size(self) -> int:
-        """Returs the client train set size.
+        """Return the client train set size.
 
         Returns
         -------
             int: train set size of the client.
         """
-        return len(self._load_dataset("train"))
+        return len(cast(Sized, self._load_dataset("train")))
 
     def get_test_set_size(self) -> int:
-        """Returs the client test set size.
+        """Return the client test set size.
 
         Returns
         -------
             int: test set size of the client.
         """
-        return len(self._load_dataset("test"))
+        return len(cast(Sized, self._load_dataset("test")))
+
 
 def get_flower_client_generator(
     model_generator: Callable[[], Module],
