@@ -159,7 +159,7 @@ def test_FEMNIST(  # noqa: N802
     batch_cnt = 0
     correct, total, loss = 0, 0, 0.0
     net.eval()
-    
+
     with torch.no_grad():
         for data, labels in tqdm(test_loader):
 
