@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# -*-coding:utf-8 -*-
+"""Client utilities for the FEMNIST dataset."""
 
 # @File    :   client.py
 # @Time    :   2023/01/21 11:36:46
@@ -11,15 +10,17 @@
 # @License :   (C)Copyright 2023, Alexandru-Andrei Iacob, Lorenzo Sani
 # @Desc    :   None
 
+import logging
 import numbers
 from collections import OrderedDict, defaultdict
 from copy import deepcopy
 from pathlib import Path
-from typing import Any, Optional, Tuple, Callable, List, Dict
+from typing import Any, cast
+from collections.abc import Callable, Sized
 
 import numpy as np
 import torch
-import torch.nn as nn
+from torch import nn
 import torch.nn.functional as F
 from flwr.common.typing import NDArrays, Scalar
 from torch.nn import Module
@@ -28,23 +29,44 @@ from torchvision import transforms
 from tqdm import tqdm
 
 from common.femnist_dataset import FEMNIST
+from flwr.common.logger import log
+
+
+def get_device() -> str:
+    """
+    Get the device (CPU, CUDA, or MPS) available for computation.
+
+    Returns
+    -------
+        str: The device available for computation.
+    """
+    device = "cpu"
+    if torch.cuda.is_available():
+        device = "cuda"
+    elif torch.backends.mps.is_available() and torch.backends.mps.is_built():
+        device = "mps"
+    return device
 
 
 # Load with appropriate transforms
 def to_tensor_transform(p: Any) -> torch.Tensor:
-    """Transform the object given to a PyTorch Tensor
+    """Transform the object given to a PyTorch Tensor.
 
     Args:
         p (Any): object to transform
 
-    Returns:
+    Returns
+    -------
         torch.Tensor: resulting PyTorch Tensor
     """
     return torch.tensor(p)
 
 
-def load_FEMNIST_dataset(data_dir: Path, mapping: Path, name: str) -> Dataset:
-    """Function to load the FEMNIST dataset given the mapping .csv file.
+def load_FEMNIST_dataset(  # noqa: N802
+    data_dir: Path, mapping: Path, name: str
+) -> Dataset:
+    """Load the FEMNIST dataset given the mapping .csv file.
+
     The relevant transforms are automatically applied.
 
     Args:
@@ -52,14 +74,13 @@ def load_FEMNIST_dataset(data_dir: Path, mapping: Path, name: str) -> Dataset:
         mapping (Path): path to the mapping .csv file chosen.
         name (str): name of the dataset to load, train or test.
 
-    Returns:
+    Returns
+    -------
         Dataset: FEMNIST dataset object, ready-to-use.
     """
-    transform = transforms.Compose(
-        [
-            transforms.ToTensor(),
-        ]
-    )
+    transform = transforms.Compose([
+        transforms.ToTensor(),
+    ])
 
     return FEMNIST(
         mapping=mapping,
@@ -70,15 +91,15 @@ def load_FEMNIST_dataset(data_dir: Path, mapping: Path, name: str) -> Dataset:
     )
 
 
-def train_FEMNIST(
+def train_FEMNIST(  # noqa: N802
     net: Module,
     train_loader: DataLoader,
     epochs: int,
     device: str,
     optimizer: torch.optim.Optimizer,
     criterion: Module,
-    max_batches: Optional[int] = None,
-    **kwargs,
+    max_batches: int | None = None,
+    **kwargs: dict[str, Any],
 ) -> float:
     """Trains the network on the training set.
 
@@ -90,10 +111,10 @@ def train_FEMNIST(
         optimizer (torch.optim.Optimizer): optimizer object.
         criterion (Module): generic module describing the loss function.
 
-    Returns:
+    Returns
+    -------
         float: the final epoch mean train loss.
     """
-   
     net.train()
     running_loss, total = 0.0, 0
     for _ in range(epochs):
@@ -114,14 +135,14 @@ def train_FEMNIST(
     return running_loss / total
 
 
-def test_FEMNIST(
+def test_FEMNIST(  # noqa: N802
     net: Module,
     test_loader: DataLoader,
     device: str,
     criterion: Module,
-    max_batches: Optional[int] = None,
-    **kwargs,
-) -> Tuple[float, float]:
+    max_batches: int | None = None,
+    **kwargs: dict[str, Any],
+) -> tuple[float, float]:
     """Validate the network on a test set.
 
     Args:
@@ -130,24 +151,24 @@ def test_FEMNIST(
         device (str):  device name onto which perform the computation.
         criterion (Module): generic module describing the loss function.
 
-    Returns:
-        Tuple[float, float]: couple of average test loss and average accuracy on the test set.
+    Returns
+    -------
+        tuple[float, float]:
+            couple of average test loss and average accuracy on the test set.
     """
-
     batch_cnt = 0
     correct, total, loss = 0, 0, 0.0
     net.eval()
+
     with torch.no_grad():
         for data, labels in tqdm(test_loader):
-            
+
             if max_batches is not None and batch_cnt >= max_batches:
                 break
             batch_cnt += 1
-            
+
             data, labels = data.to(device), labels.to(device)
             outputs = net(data)
-
-            
 
             loss += criterion(outputs, labels).item()
             _, predicted = torch.max(outputs.data, 1)
@@ -158,9 +179,11 @@ def test_FEMNIST(
     return loss, accuracy
 
 
-##  Define a simple CNN
+# Define a simple CNN
 class Net(nn.Module):
-    def __init__(self):
+    """Simple CNN model for FEMNIST."""
+
+    def __init__(self) -> None:
         super().__init__()
         self.conv1 = nn.Conv2d(1, 6, 5)
         self.pool = nn.MaxPool2d(2, 2)
@@ -169,7 +192,17 @@ class Net(nn.Module):
         self.fc2 = nn.Linear(120, 84)
         self.fc3 = nn.Linear(84, 62)
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Perform a forward pass through the neural network.
+
+        Args:
+            x (torch.Tensor): The input tensor.
+
+        Returns
+        -------
+            torch.Tensor: The output tensor.
+        """
         x = self.pool(F.relu(self.conv1(x)))
         x = self.pool(F.relu(self.conv2(x)))
         x = torch.flatten(x, 1)  # flatten all dimensions except batch
@@ -179,16 +212,28 @@ class Net(nn.Module):
         return x
 
 
-##  Define a simple MLP
+# Define a simple MLP
 class MLP(nn.Module):
-    def __init__(self):
+    """Simple MLP model for FEMNIST."""
+
+    def __init__(self) -> None:
         super().__init__()
         self.flatten = nn.Flatten()
         self.fc1 = nn.Linear(784, 1000)
         self.fc2 = nn.Linear(1000, 500)
         self.fc3 = nn.Linear(500, 62)
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Forward pass of the neural network.
+
+        Args:
+            x (torch.Tensor): Input tensor.
+
+        Returns
+        -------
+            torch.Tensor: Output tensor.
+        """
         x = self.flatten(x)  # flatten all dimensions except batch
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
@@ -198,10 +243,11 @@ class MLP(nn.Module):
 
 # All experiments will have the exact same initialization.
 # All differences in performance will come from training
-def get_network_generator_cnn():
+def get_network_generator_cnn() -> Callable[[], Net]:
+    """Get function to generate a new CNN model."""
     untrained_net: Net = Net()
 
-    def generated_net():
+    def generated_net() -> Net:
         return deepcopy(untrained_net)
 
     return generated_net
@@ -209,52 +255,55 @@ def get_network_generator_cnn():
 
 # All experiments will have the exact same initialization.
 # All differences in performance will come from training
-def get_network_generator_mlp():
+def get_network_generator_mlp() -> Callable[[], MLP]:
+    """Get function to generate a new MLP model."""
     untrained_net: MLP = MLP()
 
-    def generated_net():
+    def generated_net() -> MLP:
         return deepcopy(untrained_net)
 
     return generated_net
 
 
 def set_model_parameters(net: Module, parameters: NDArrays) -> Module:
-    """Function to put a set of parameters into the model object.
+    """Get function to put a set of parameters into the model object.
 
     Args:
         net (Module): model object.
         parameters (NDArrays): set of parameters to put into the model.
 
-    Returns:
+    Returns
+    -------
         Module: updated model object.
     """
     weights = parameters
-    params_dict = zip(net.state_dict().keys(), weights)
+    params_dict = zip(net.state_dict().keys(), weights, strict=False)
     state_dict = OrderedDict({k: torch.from_numpy(np.copy(v)) for k, v in params_dict})
     net.load_state_dict(state_dict, strict=True)
     return net
 
 
 def get_model_parameters(net: Module) -> NDArrays:
-    """Function to get the current model parameters as NDArrays.
+    """Get function to get the current model parameters as NDArrays.
 
     Args:
         net (Module): current model object.
 
-    Returns:
+    Returns
+    -------
         NDArrays: set of parameters from the current model.
     """
     return [val.cpu().numpy() for _, val in net.state_dict().items()]
 
 
-def aggregate_weighted_average(metrics: List[Tuple[int, dict]]) -> dict:
-    """Generic function to combine results from multiple clients
-    following training or evaluation.
+def aggregate_weighted_average(metrics: list[tuple[int, dict]]) -> dict:
+    """Combine results from multiple clients.
 
     Args:
-        metrics (List[Tuple[int, dict]]): collected clients metrics
+        metrics (list[tuple[int, dict]]): collected clients metrics
 
-    Returns:
+    Returns
+    -------
         dict: result dictionary containing the aggregate of the metrics passed.
     """
     average_dict: dict = defaultdict(list)
@@ -262,12 +311,12 @@ def aggregate_weighted_average(metrics: List[Tuple[int, dict]]) -> dict:
     for num_examples, metrics_dict in metrics:
         for key, val in metrics_dict.items():
             if isinstance(val, numbers.Number):
-                average_dict[key].append((num_examples, val))  # type:ignore
+                average_dict[key].append((num_examples, val))
         total_examples += num_examples
     return {
         key: {
             "avg": float(
-                sum([num_examples * metr for num_examples, metr in val])
+                sum([num_examples * m for num_examples, m in val])
                 / float(total_examples)
             ),
             "all": val,
@@ -284,8 +333,9 @@ def get_federated_evaluation_function(
     num_workers: int,
     model_generator: Callable[[], Module],
     criterion: Module,
-) -> Callable[[int, NDArrays, Dict[str, Any]], Tuple[float, Dict[str, Scalar]]]:
-    """Wrapper function for the external federated evaluation function.
+) -> Callable[[int, NDArrays, dict[str, Any]], tuple[float, dict[str, Scalar]]]:
+    """Wrap function for the external federated evaluation function.
+
     It provides the external federated evaluation function with some
     parameters for the dataloader, the model generator function, and
     the criterion used in the evaluation.
@@ -297,41 +347,50 @@ def get_federated_evaluation_function(
         batch_size (int): batch size of the test set to use.
         num_workers (int): correspond to `num_workers` param in the Dataloader object.
         model_generator (Callable[[], Module]):  model generator function.
-        criterion (Module): PyTorch Module containing the criterion for evaluating the model.
+        criterion (Module): PyTorch Module containing the criterion.
 
-    Returns:
-        Callable[[int, NDArrays, Dict[str, Any]], Tuple[float, Dict[str, Scalar]]]: external federated evaluation function.
+    Returns
+    -------
+        Callable[[int, NDArrays, dict[str, Any]], tuple[float, dict[str, Scalar]]]:
+            external federated evaluation function.
     """
-    
     full_file: Path = centralized_mapping
     dataset: Dataset = load_FEMNIST_dataset(data_dir, full_file, "val")
-    mean = np.mean([val[1] for val in dataset])
-    num_samples = len(dataset)
-    index_list = list(range(0, num_samples))
+    num_samples = len(cast(Sized, dataset))
+    index_list = list(range(num_samples))
     prng = np.random.RandomState(1337)
     prng.shuffle(index_list)
     index_list = index_list[:1500]
-    dataset =  torch.utils.data.Subset(dataset, index_list)
+    dataset = torch.utils.data.Subset(dataset, index_list)
 
-    print("Reduced federated test_set size from ", num_samples, " to a size of ", len(dataset), " mean index:", np.mean(index_list))
+    log(
+        logging.INFO,
+        "Reduced federated test_set size from %s to a size of %s mean index: %s",
+        num_samples,
+        len(cast(Sized, dataset)),
+        np.mean(index_list),
+    )
 
     def federated_evaluation_function(
         server_round: int,
         parameters: NDArrays,
-        fed_eval_config: Dict[
+        fed_eval_config: dict[
             str, Any
         ],  # mandatory argument, even if it's not being used
-    ) -> Tuple[float, Dict[str, Scalar]]:
-        """Evaluation function external to the federation.
+    ) -> tuple[float, dict[str, Scalar]]:
+        """Evaluate on a centralized test set.
+
         It uses the centralized val set for sake of simplicity.
 
         Args:
             server_round (int): current federated round.
             parameters (NDArrays): current model parameters.
-            fed_eval_config (Dict[str, Any]): mandatory argument in Flower, can contain some configuration info
+            fed_eval_config (dict[str, Any]): mandatory argument in Flower,
+                                              can contain some configuration info
 
-        Returns:
-            Tuple[float, Dict[str, Scalar]]: evaluation results
+        Returns
+        -------
+            tuple[float, dict[str, Scalar]]: evaluation results
         """
         net: Module = set_model_parameters(model_generator(), parameters)
         net.to(device)
@@ -355,19 +414,22 @@ def get_federated_evaluation_function(
     return federated_evaluation_function
 
 
-def get_default_train_config() -> Dict[str, Any]:
+def get_default_train_config() -> dict[str, Any]:
+    """Get default training configuration."""
     return {
         "epochs": 8,
         "batch_size": 32,
         "client_learning_rate": 0.01,
         "weight_decay": 0.001,
         "num_workers": 0,
+        "max_batches": 100,
     }
 
 
-def get_default_test_config() -> Dict[str, Any]:
+def get_default_test_config() -> dict[str, Any]:
+    """Get default testing configuration."""
     return {
         "batch_size": 32,
         "num_workers": 0,
+        "max_batches": 100,
     }
-
