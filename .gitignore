@@ -163,4 +163,6 @@ cython_debug/
 # FEMNIST dataset
 *femnist.tar.gz
 *femnist
+
+# Histories
 histories
