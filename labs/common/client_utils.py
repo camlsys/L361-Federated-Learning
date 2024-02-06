@@ -31,6 +31,8 @@ from tqdm import tqdm
 from common.femnist_dataset import FEMNIST
 from flwr.common.logger import log
 
+class IntentionalDropoutError(BaseException):
+    """For clients to intentionally drop out of the federated learning process."""
 
 def get_device() -> str:
     """
