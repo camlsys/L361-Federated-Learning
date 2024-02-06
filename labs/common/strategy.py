@@ -10,6 +10,7 @@
 # @Desc    :   None
 from collections.abc import Callable
 from logging import INFO
+import logging
 
 import numpy as np
 
@@ -28,7 +29,8 @@ from flwr.server.client_proxy import ClientProxy
 
 from flwr.server.strategy import FedAvgM
 
-from client_manager import CustomClientManager
+from common.client_manager import CustomClientManager
+from common.client_utils import IntentionalDropoutError
 
 
 # flake8: noqa: E501
@@ -149,6 +151,12 @@ class FedAvgTraces(FedAvgM):
         # Second, see whether adding `failures` to `results` makes sense.
         # Alternatively, modify the `fit_metrics_aggregation_fn` to receive `failures` as well.
         # The objective is to make the `failures` visible to the user in the outputs.
+        for failure in failures:
+            try:
+                if isinstance(failure, BaseException):
+                    raise failure
+            except IntentionalDropoutError as e:
+                log(logging.INFO, f"IntentionalDropoutError: {e}")
         self._increase_current_virtual_clock(results)  # type: ignore
         return super().aggregate_fit(
             server_round=server_round,
@@ -172,7 +180,7 @@ class FedAvgTraces(FedAvgM):
 
     def _increase_current_virtual_clock(
         self,
-        results: list[tuple[ClientProxy, FitRes, EvaluateRes]],
+        results: list[tuple[ClientProxy, FitRes | EvaluateRes]],
     ) -> None:
         client_completion_times = [
             res.metrics["client_completion_time"] for _, res in results
