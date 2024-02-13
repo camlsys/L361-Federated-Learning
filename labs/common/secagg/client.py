@@ -76,7 +76,7 @@ class SecureAggregationClient(NumPyClient):
         elif stage == SecAggStages.STAGE_2:
             packet_lst, fit_ins = load_content(config)
             # log(INFO, f'Client {self.sec_agg_id}: \n' + str(packet_lst))
-            ndarrays = ask_vectors(self, packet_lst, fit_ins)
+            ndarrays = ask_vectors(self, packet_lst)
         elif stage == SecAggStages.STAGE_3:
             actives, dropouts = load_content(config)
             ret = unmask_vectors(self, actives, dropouts)

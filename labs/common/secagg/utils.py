@@ -28,7 +28,7 @@ from flwr.common import FitIns, Parameters, ndarrays_to_parameters, Scalar
 class SecAggStages(IntEnum):
     """Class for dealing with Secure Aggregation stages."""
 
-    STAGE_0 = auto()
+    STAGE_0 = 0
     STAGE_1 = auto()
     STAGE_2 = auto()
     STAGE_3 = auto()

@@ -1,10 +1,9 @@
 """Strategy for Secure Aggregation."""
 
 from logging import INFO
+import logging
+from typing import Callable, Dict, List, Optional, Tuple, Union
 from flwr.common import (
-    FitIns,
-    FitRes,
-    Parameters,
     Scalar,
     parameters_to_ndarrays,
     ndarrays_to_parameters,
@@ -12,7 +11,7 @@ from flwr.common import (
 )
 from flwr.server import ClientManager
 from flwr.server.client_proxy import ClientProxy
-from flwr.server.strategy import Strategy
+from flwr.server.strategy import FedAvg
 import numpy as np
 
 from common.secagg.utils import (
@@ -36,16 +35,62 @@ from common.secagg.utils import (
 )
 
 
-class SecureAggregationStrategy(Strategy):
+from flwr.common import (
+    FitIns,
+    FitRes,
+    MetricsAggregationFn,
+    NDArrays,
+    Parameters,
+    Scalar,
+    ndarrays_to_parameters,
+    parameters_to_ndarrays,
+)
+
+
+class SecureAggregationStrategy(FedAvg):
     """Flower strategy for secure aggregation."""
 
     def __init__(
         self,
+        *,
         n_dim: int,
         num_clients_per_round: int,
         threshold: float,
         num_dropouts: int,
+               fraction_fit: float = 0.0,
+        fraction_evaluate: float = 0.0,
+        min_fit_clients: int = 0,
+        min_evaluate_clients: int = 0,
+        min_available_clients: int = 0,
+        evaluate_fn: Optional[
+            Callable[
+                [int, NDArrays, Dict[str, Scalar]],
+                Optional[Tuple[float, Dict[str, Scalar]]],
+            ]
+        ] = None,
+        on_fit_config_fn: Optional[Callable[[int], Dict[str, Scalar]]] = None,
+        on_evaluate_config_fn: Optional[Callable[[int], Dict[str, Scalar]]] = None,
+        accept_failures: bool = True,
+        initial_parameters: Optional[Parameters] = None,
+        fit_metrics_aggregation_fn: Optional[MetricsAggregationFn] = None,
+        evaluate_metrics_aggregation_fn: Optional[MetricsAggregationFn] = None,
     ) -> None:
+        
+        super().__init__(
+            fraction_fit=fraction_fit,
+            fraction_evaluate=fraction_evaluate,
+            min_fit_clients=num_clients_per_round,
+            min_evaluate_clients=min_evaluate_clients,
+            min_available_clients=num_clients_per_round,
+            evaluate_fn=evaluate_fn,
+            on_fit_config_fn=on_fit_config_fn,
+            on_evaluate_config_fn=on_evaluate_config_fn,
+            accept_failures=accept_failures,
+            initial_parameters=initial_parameters,
+            fit_metrics_aggregation_fn=fit_metrics_aggregation_fn,
+            evaluate_metrics_aggregation_fn=evaluate_metrics_aggregation_fn,
+        )
+        
         self.n_dim = n_dim
         self.sample_num = num_clients_per_round
         self.threshold = threshold
@@ -70,7 +115,9 @@ class SecureAggregationStrategy(Strategy):
         """Configure the next round of training."""
         config = {"server_rnd": server_round, "stage": self.stage}
         tmp_ret: list[tuple[ClientProxy, FitIns]] = []
+        log(logging.INFO, f"Configure fit: stage {self.stage}, {SecAggStages.STAGE_0}, {self.stage == SecAggStages.STAGE_0}")
         if self.stage == SecAggStages.STAGE_0:
+            log(logging.INFO, "Stage 0")
             config["share_num"] = self.sample_num
             config["threshold"] = self.threshold
             self.proxy2id = {}
