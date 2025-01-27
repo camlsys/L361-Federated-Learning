@@ -1,32 +1,35 @@
 # L361 2025 - Final Project Proposals
 
----
-> Choose the project during the **first two weeks of the term** (the sooner, the better).
->
-> The overarching themes/tracks suggested are proposed here.
->
-> The very details of the project have to be discussed with the teaching assistants during the lab sessions.
->
-> Groups of up to three are allowed.
->
-> Mixed (Part II with Part III/MPhil) groups are not allowed.
->
-> Students can propose projects beyond those in this document prior discussion with teaching assistants.
->
-> Multiple students/groups can pick the same theme/track.
->
-> Tracks are not provided with a recommended group size or group level (Part II or Part III/MPhil), and their suitability has to be discussed with the teaching Assistants.
->
-> **The last lab session is mostly for Project updates and discussion.**
->
-> Students can further discuss the project during the lab sessions, only.
->
-> Once a week, students can ask for booking office hours with teaching assistants if they require further support.
->
-> Teaching Assistants: Lorenzo Sani <ls985@cam.ac.uk> and Alexandru-Andrei Iacob <aai30@cam.ac.uk>
+This page provides guidance on choosing the Final Project for the L361 Course "Federated Learning: Theory and Practice".
+Read the documentation carefully and reach out to the Teaching Assistants for further questions.
 
 ---
+
+## Marking and Guidelines
+
+The final project is worth **50%** of the total grade for the course.
+The Final Project is due 15th March @ 12 pm; materials made public (unless you opt-out).
+Deliverables for the Final Project are: Code + Report + Recorded Talk.
+The talk is optional for Part II.
+Separate project guidelines are provided for each cohort in this repository.
+Part III/MPhils are required to be more research focused.
+
+Choose the project during the **first two weeks of the term** (the sooner, the better).
+The overarching themes/tracks suggested are proposed here.
+The very details of the project have to be discussed with the teaching assistants during the lab sessions.
+Groups of up to three are allowed.
+Mixed (Part II with Part III/MPhil) groups are not allowed.
+Students can propose projects beyond those in this document prior discussion with teaching assistants.
+Multiple students/groups can pick the same theme/track.
+Tracks are not provided with a recommended group size or group level (Part II or Part III/MPhil), and their suitability has to be discussed with the teaching Assistants.
+**The last lab session is mostly for Project updates and discussion.**
+Students can further discuss the project during the lab sessions, only.
+Once a week, students can ask for booking office hours with teaching assistants if they require further support.
+Teaching Assistants: Lorenzo Sani <ls985@cam.ac.uk> and Alexandru-Andrei Iacob <aai30@cam.ac.uk>
+
 ---
+
+Here the project track follow.
 
 ## Noise Scale and Critical Batch Size in Federated Learning
 
