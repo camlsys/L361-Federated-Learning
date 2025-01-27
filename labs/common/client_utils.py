@@ -65,7 +65,7 @@ def to_tensor_transform(p: Any) -> torch.Tensor:
     return torch.tensor(p)
 
 
-def load_FEMNIST_dataset(  # noqa: N802
+def load_femnist_dataset(
     data_dir: Path, mapping: Path, name: str
 ) -> Dataset:
     """Load the FEMNIST dataset given the mapping .csv file.
@@ -95,7 +95,7 @@ def load_FEMNIST_dataset(  # noqa: N802
     )
 
 
-def train_FEMNIST(  # noqa: N802
+def train_femnist(
     net: Module,
     train_loader: DataLoader,
     epochs: int,
@@ -138,7 +138,7 @@ def train_FEMNIST(  # noqa: N802
     return running_loss / total
 
 
-def test_FEMNIST(  # noqa: N802
+def test_femnist(
     net: Module,
     test_loader: DataLoader,
     device: str,
@@ -385,7 +385,7 @@ def get_federated_evaluation_function(
             external federated evaluation function.
     """
     full_file: Path = centralized_mapping
-    dataset: Dataset = load_FEMNIST_dataset(data_dir, full_file, "val")
+    dataset: Dataset = load_femnist_dataset(data_dir, full_file, "val")
     num_samples = len(cast(Sized, dataset))
     index_list = list(range(num_samples))
     prng = np.random.RandomState(1337)
@@ -434,7 +434,7 @@ def get_federated_evaluation_function(
             drop_last=False,
         )
 
-        loss, acc = test_FEMNIST(
+        loss, acc = test_femnist(
             net=net,
             test_loader=valid_loader,
             device=device,
