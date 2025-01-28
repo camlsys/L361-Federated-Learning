@@ -2,37 +2,16 @@
 requires = ["poetry-core>=1.4.0"]
 build-backend = "poetry.masonry.api"
 
-[tool.poetry]
+[project]
 name = "labs" # Do not change this
-version = "1.0.0"
+version = "2.0.0"
 description = "L361 Federated Learning"
-license = "Apache-2.0"
-authors = ["Alexandru-Andrei Iacob <aai30@cam.ac.uk>, Lorenzo Sani <ls985@cam.ac.uk>"]
 readme = "README.md"
-# homepage = ""
-# documentation = ""
-classifiers = [
-    "Development Status :: 3 - Alpha",
-    "Intended Audience :: Developers",
-    "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: Apache Software License",
-    "Operating System :: MacOS :: MacOS X",
-    "Operating System :: POSIX :: Linux",
-    "Programming Language :: Python",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: Implementation :: CPython",
-    "Topic :: Scientific/Engineering",
-    "Topic :: Scientific/Engineering :: Artificial Intelligence",
-    "Topic :: Scientific/Engineering :: Mathematics",
-    "Topic :: Software Development",
-    "Topic :: Software Development :: Libraries",
-    "Topic :: Software Development :: Libraries :: Python Modules",
-    "Typing :: Typed",
+license = "Apache-2.0"
+dynamic = ["classifiers", "dependencies", "requires-python"]
+authors = [
+    { name = "Lorenzo Sani", email = "ls985@cam.ac.uk" },
+    { name = "Alexandru-Andrei Iacob", email = "aai30@cam.ac.uk" },
 ]
 
 [tool.poetry.dependencies]
@@ -73,7 +52,7 @@ opencv-python = "^4.8.1.78"
 jupyter = "^1.0.0"
 
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 black = { version = "==23.1.0", extras = ["jupyter"] }
 docformatter = "==1.7.5"
 mypy = "==1.6.1"

@@ -1,14 +1,7 @@
-"""Client utilities for the FEMNIST dataset."""
+# Copyright 2025 Lorenzo Sani & Alexandru-Andrei Iacob
+# SPDX-License-Identifier: Apache-2.0
 
-# @File    :   client.py
-# @Time    :   2023/01/21 11:36:46
-# @Author  :   Alexandru-Andrei Iacob
-# @Contact :   aai30@cam.ac.uk
-# @Author  :   Lorenzo Sani
-# @Contact :   ls985@cam.ac.uk, lollonasi97@gmail.com
-# @Version :   1.0
-# @License :   (C)Copyright 2023, Alexandru-Andrei Iacob, Lorenzo Sani
-# @Desc    :   None
+"""Client utilities for the FEMNIST dataset."""
 
 import logging
 import numbers
@@ -28,11 +21,13 @@ from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
 from tqdm import tqdm
 
-from common.femnist_dataset import FEMNIST
+from labs.common.femnist_dataset import FEMNIST
 from flwr.common.logger import log
+
 
 class IntentionalDropoutError(BaseException):
     """For clients to intentionally drop out of the federated learning process."""
+
 
 def get_device() -> str:
     """
@@ -54,7 +49,8 @@ def get_device() -> str:
 def to_tensor_transform(p: Any) -> torch.Tensor:
     """Transform the object given to a PyTorch Tensor.
 
-    Args:
+    Parameters
+    ----------
         p (Any): object to transform
 
     Returns
@@ -64,14 +60,13 @@ def to_tensor_transform(p: Any) -> torch.Tensor:
     return torch.tensor(p)
 
 
-def load_FEMNIST_dataset(  # noqa: N802
-    data_dir: Path, mapping: Path, name: str
-) -> Dataset:
+def load_femnist_dataset(data_dir: Path, mapping: Path, name: str) -> Dataset:
     """Load the FEMNIST dataset given the mapping .csv file.
 
     The relevant transforms are automatically applied.
 
-    Args:
+    Parameters
+    ----------
         data_dir (Path): path to the dataset folder.
         mapping (Path): path to the mapping .csv file chosen.
         name (str): name of the dataset to load, train or test.
@@ -93,7 +88,7 @@ def load_FEMNIST_dataset(  # noqa: N802
     )
 
 
-def train_FEMNIST(  # noqa: N802
+def train_femnist(
     net: Module,
     train_loader: DataLoader,
     epochs: int,
@@ -105,7 +100,8 @@ def train_FEMNIST(  # noqa: N802
 ) -> float:
     """Trains the network on the training set.
 
-    Args:
+    Parameters
+    ----------
         net (Module): generic module object describing the network to train.
         train_loader (DataLoader): dataloader to iterate during the training.
         epochs (int): number of epochs of training.
@@ -122,11 +118,9 @@ def train_FEMNIST(  # noqa: N802
     for _ in range(epochs):
         running_loss = 0.0
         total = 0
-        batch_cnt = 0
-        for data, labels in train_loader:
-            if max_batches is not None and batch_cnt >= max_batches:
+        for i, (data, labels) in enumerate(train_loader):
+            if max_batches is not None and i >= max_batches:
                 break
-            batch_cnt += 1
             data, labels = data.to(device), labels.to(device)
             optimizer.zero_grad()
             loss = criterion(net(data), labels)
@@ -137,7 +131,7 @@ def train_FEMNIST(  # noqa: N802
     return running_loss / total
 
 
-def test_FEMNIST(  # noqa: N802
+def test_femnist(
     net: Module,
     test_loader: DataLoader,
     device: str,
@@ -147,7 +141,8 @@ def test_FEMNIST(  # noqa: N802
 ) -> tuple[float, float]:
     """Validate the network on a test set.
 
-    Args:
+    Parameters
+    ----------
         net (Module): generic module object describing the network to test.
         test_loader (DataLoader): dataloader to iterate during the testing.
         device (str):  device name onto which perform the computation.
@@ -218,7 +213,8 @@ class Net(nn.Module):
         """
         Perform a forward pass through the neural network.
 
-        Args:
+        Parameters
+        ----------
             x (torch.Tensor): The input tensor.
 
         Returns
@@ -249,7 +245,8 @@ class MLP(nn.Module):
         """
         Forward pass of the neural network.
 
-        Args:
+        Parameters
+        ----------
             x (torch.Tensor): Input tensor.
 
         Returns
@@ -290,7 +287,8 @@ def get_network_generator_mlp() -> Callable[[], MLP]:
 def set_model_parameters(net: Module, parameters: NDArrays) -> Module:
     """Get function to put a set of parameters into the model object.
 
-    Args:
+    Parameters
+    ----------
         net (Module): model object.
         parameters (NDArrays): set of parameters to put into the model.
 
@@ -308,7 +306,8 @@ def set_model_parameters(net: Module, parameters: NDArrays) -> Module:
 def get_model_parameters(net: Module) -> NDArrays:
     """Get function to get the current model parameters as NDArrays.
 
-    Args:
+    Parameters
+    ----------
         net (Module): current model object.
 
     Returns
@@ -321,7 +320,8 @@ def get_model_parameters(net: Module) -> NDArrays:
 def aggregate_weighted_average(metrics: list[tuple[int, dict]]) -> dict:
     """Combine results from multiple clients.
 
-    Args:
+    Parameters
+    ----------
         metrics (list[tuple[int, dict]]): collected clients metrics
 
     Returns
@@ -362,7 +362,8 @@ def get_federated_evaluation_function(
     parameters for the dataloader, the model generator function, and
     the criterion used in the evaluation.
 
-    Args:
+    Parameters
+    ----------
         data_dir (Path): path to the dataset folder.
         centralized_mapping (Path): path to the mapping .csv file chosen.
         device (str):  device name onto which perform the computation.
@@ -377,7 +378,7 @@ def get_federated_evaluation_function(
             external federated evaluation function.
     """
     full_file: Path = centralized_mapping
-    dataset: Dataset = load_FEMNIST_dataset(data_dir, full_file, "val")
+    dataset: Dataset = load_femnist_dataset(data_dir, full_file, "val")
     num_samples = len(cast(Sized, dataset))
     index_list = list(range(num_samples))
     prng = np.random.RandomState(1337)
@@ -404,7 +405,8 @@ def get_federated_evaluation_function(
 
         It uses the centralized val set for sake of simplicity.
 
-        Args:
+        Parameters
+        ----------
             server_round (int): current federated round.
             parameters (NDArrays): current model parameters.
             fed_eval_config (dict[str, Any]): mandatory argument in Flower,
@@ -425,7 +427,7 @@ def get_federated_evaluation_function(
             drop_last=False,
         )
 
-        loss, acc = test_FEMNIST(
+        loss, acc = test_femnist(
             net=net,
             test_loader=valid_loader,
             device=device,

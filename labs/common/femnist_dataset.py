@@ -1,14 +1,7 @@
-"""Module to load the FEMNIST dataset."""
+# Copyright 2025 Lorenzo Sani & Alexandru-Andrei Iacob
+# SPDX-License-Identifier: Apache-2.0
 
-# @File    :   client.py
-# @Time    :   2023/01/21 11:36:46
-# @Author  :   Alexandru-Andrei Iacob
-# @Contact :   aai30@cam.ac.uk
-# @Author  :   Lorenzo Sani
-# @Contact :   ls985@cam.ac.uk, lollonasi97@gmail.com
-# @Version :   1.0
-# @License :   (C)Copyright 2023, Alexandru-Andrei Iacob, Lorenzo Sani
-# @Desc    :   None
+"""Module to load the FEMNIST dataset."""
 
 import csv
 from pathlib import Path
@@ -31,9 +24,10 @@ class FEMNIST(Dataset):
         transform: Callable[[ImageType], Any] | None = None,
         target_transform: Callable[[int], Any] | None = None,
     ) -> None:
-        """Initialize the FEMNIST dataset.
+        """Initialise the FEMNIST dataset.
 
-        Args:
+        Parameters
+        ----------
             mapping (Path): path to the mapping folder containing the .csv files.
             data_dir (Path): path to the dataset folder. Defaults to data_dir.
             name (str): name of the dataset to load, train or test.
@@ -107,7 +101,7 @@ class FEMNIST(Dataset):
             if not csv_path.exists():
                 raise ValueError(f"Required files do not exist, path: {csv_path}")
 
-            with open(csv_path) as csv_file:
+            with open(csv_path, encoding="utf-8") as csv_file:
                 csv_reader = csv.reader(csv_file)
                 # Ignore header
                 next(csv_reader)

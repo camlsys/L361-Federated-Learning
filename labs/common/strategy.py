@@ -1,13 +1,8 @@
+# Copyright 2025 Lorenzo Sani & Alexandru-Andrei Iacob
+# SPDX-License-Identifier: Apache-2.0
+
 """Module for implementing FedAvg Strategy with traces."""
-# @File    :   client.py
-# @Time    :   2024/02/06 08:50:43
-# @Author  :   Alexandru-Andrei Iacob
-# @Contact :   aai30@cam.ac.uk
-# @Author  :   Lorenzo Sani
-# @Contact :   ls985@cam.ac.uk, lollonasi97@gmail.com
-# @Version :   1.0
-# @License :   (C)Copyright 2023, Alexandru-Andrei Iacob, Lorenzo Sani
-# @Desc    :   None
+
 from collections.abc import Callable
 from logging import INFO
 import logging
@@ -29,8 +24,8 @@ from flwr.server.client_proxy import ClientProxy
 
 from flwr.server.strategy import FedAvgM
 
-from common.client_manager import CustomClientManager
-from common.client_utils import IntentionalDropoutError
+from labs.common.client_manager import CustomClientManager
+from labs.common.client_utils import IntentionalDropoutError
 
 
 # flake8: noqa: E501
@@ -46,10 +41,13 @@ class FedAvgTraces(FedAvgM):
         min_fit_clients: int = 2,
         min_evaluate_clients: int = 2,
         min_available_clients: int = 2,
-        evaluate_fn: Callable[
-            [int, NDArrays, dict[str, Scalar]],
-            tuple[float, dict[str, Scalar]] | None,
-        ] | None = None,
+        evaluate_fn: (
+            Callable[
+                [int, NDArrays, dict[str, Scalar]],
+                tuple[float, dict[str, Scalar]] | None,
+            ]
+            | None
+        ) = None,
         on_fit_config_fn: Callable[[int], dict[str, Scalar]] | None = None,
         on_evaluate_config_fn: Callable[[int], dict[str, Scalar]] | None = None,
         accept_failures: bool = True,
@@ -77,7 +75,7 @@ class FedAvgTraces(FedAvgM):
         )
         self.current_virtual_clock = 0.0
 
-    def configure_fit(
+    def configure_fit(  # type: ignore[reportIncompatibleMethodOverride]
         self,
         server_round: int,
         parameters: Parameters,
@@ -106,7 +104,7 @@ class FedAvgTraces(FedAvgM):
         # Return client/config pairs
         return [(client, fit_ins) for client in clients]
 
-    def configure_evaluate(
+    def configure_evaluate(  # type: ignore[reportIncompatibleMethodOverride]
         self,
         server_round: int,
         parameters: Parameters,
@@ -114,7 +112,7 @@ class FedAvgTraces(FedAvgM):
     ) -> list[tuple[ClientProxy, EvaluateIns]]:
         """Configure the next round of evaluation."""
         # Do not configure federated evaluation if fraction eval is 0.
-        if self.fraction_evaluate == 0.0:
+        if self.fraction_evaluate == 0:
             return []
 
         # Parameters and config
@@ -146,6 +144,7 @@ class FedAvgTraces(FedAvgM):
         results: list[tuple[ClientProxy, FitRes]],
         failures: list[tuple[ClientProxy, FitRes] | BaseException],
     ) -> tuple[Parameters | None, dict[str, Scalar]]:
+        """Aggregate fit results and log failures."""
         # TODO: add printing failures to the result metrics.
         # First, try to print `failures` to see its content.
         # Second, see whether adding `failures` to `results` makes sense.
@@ -157,7 +156,7 @@ class FedAvgTraces(FedAvgM):
                     raise failure
             except IntentionalDropoutError as e:
                 log(logging.INFO, f"IntentionalDropoutError: {e}")
-        self._increase_current_virtual_clock(results)  # type: ignore
+        self._increase_current_virtual_clock(results)  # type: ignore[reportArgumentType]
         return super().aggregate_fit(
             server_round=server_round,
             results=results,
@@ -171,7 +170,7 @@ class FedAvgTraces(FedAvgM):
         failures: list[tuple[ClientProxy, EvaluateRes] | BaseException],
     ) -> tuple[float | None, dict[str, Scalar]]:
         """Aggregate evaluation losses using weighted average."""
-        self._increase_current_virtual_clock(results)  # type: ignore
+        self._increase_current_virtual_clock(results)  # type: ignore[reportArgumentType]
         return super().aggregate_evaluate(
             server_round=server_round,
             results=results,
@@ -200,14 +199,15 @@ class DeterministicSampleFedAvg(FedAvgM):
         results: list[tuple[ClientProxy, FitRes]],
         failures: list[tuple[ClientProxy, FitRes] | BaseException],
     ) -> tuple[Parameters | None, dict[str, Scalar]]:
-        [print(f) for f in failures]
+        """Aggregate fit results and log failures."""
+        log(INFO, "Failures: %s", failures)
         return super().aggregate_fit(
             server_round=server_round,
             results=results,
             failures=failures,
         )
 
-    def configure_fit(
+    def configure_fit(  # type: ignore[reportIncompatibleMethodOverride]
         self,
         server_round: int,
         parameters: Parameters,
@@ -234,7 +234,7 @@ class DeterministicSampleFedAvg(FedAvgM):
         # Return client/config pairs
         return [(client, fit_ins) for client in clients]
 
-    def configure_evaluate(
+    def configure_evaluate(  # type: ignore[reportIncompatibleMethodOverride]
         self,
         server_round: int,
         parameters: Parameters,
@@ -242,7 +242,7 @@ class DeterministicSampleFedAvg(FedAvgM):
     ) -> list[tuple[ClientProxy, EvaluateIns]]:
         """Configure the next round of evaluation."""
         # Do not configure federated evaluation if fraction eval is 0.
-        if self.fraction_evaluate == 0.0:
+        if self.fraction_evaluate == 0:
             return []
 
         # Parameters and config
