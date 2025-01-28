@@ -1,3 +1,6 @@
+# Copyright 2025 Lorenzo Sani & Alexandru-Andrei Iacob
+# SPDX-License-Identifier: Apache-2.0
+
 """Utility function for Secure Aggregation (SA) in Flower.
 
 These functions are for demonstration purposes only.
@@ -61,7 +64,8 @@ def build_fit_ins(
     )
 
 
-## Key Generation  ====================================================================
+# Key Generation  ====================================================================
+
 
 def generate_key_pairs() -> (
     tuple[ec.EllipticCurvePrivateKey, ec.EllipticCurvePublicKey]
@@ -118,7 +122,7 @@ def generate_shared_key(
     return base64.urlsafe_b64encode(derivedk)
 
 
-## Authenticated Encryption ============================================================
+# Authenticated Encryption ============================================================
 
 
 def encrypt(key: bytes, plaintext: bytes) -> bytes:
@@ -135,7 +139,7 @@ def decrypt(key: bytes, token: bytes) -> bytes:
     return f.decrypt(token)
 
 
-## Random Bytes Generator =============================================================
+# Random Bytes Generator =============================================================
 
 
 def rand_bytes(num: int = 32) -> bytes:
@@ -143,7 +147,8 @@ def rand_bytes(num: int = 32) -> bytes:
     return os.urandom(num)
 
 
-## Arithmetics ========================================================================
+# Arithmetics ========================================================================
+
 
 def factor_weights_combine(
     weights_factor: int, weights: list[np.ndarray]
@@ -151,13 +156,16 @@ def factor_weights_combine(
     """Combine the factor with the weights and return the combined weights."""
     return [np.array([weights_factor])] + weights
 
+
 def factor_weights_extract(weights: list[np.ndarray]) -> tuple[int, list[np.ndarray]]:
     """Extract the factor from the weights and return the rest of the weights."""
     return weights[0][0], weights[1:]
 
+
 def weights_shape(weights: list[np.ndarray]) -> list[tuple]:
     """Create a list of shapes of each element in weights."""
     return [arr.shape for arr in weights]
+
 
 def weights_zero_generate(
     dimensions_list: list[tuple], dtype: type = np.int64
@@ -165,31 +173,37 @@ def weights_zero_generate(
     """Generate a list of zero weights based on the dimensions list."""
     return [np.zeros(dimensions, dtype=dtype) for dimensions in dimensions_list]
 
+
 def weights_addition(a: list[np.ndarray], b: list[np.ndarray]) -> list[np.ndarray]:
     """Add two lists of weights element-wise."""
     return [a[idx] + b[idx] for idx in range(len(a))]
+
 
 def weights_subtraction(a: list[np.ndarray], b: list[np.ndarray]) -> list[np.ndarray]:
     """Subtract b from a element-wise."""
     return [a[idx] - b[idx] for idx in range(len(a))]
 
+
 def weights_mod(a: list[np.ndarray], b: int) -> list[np.ndarray]:
     """Take mod of a weights with an integer. If b is a power of 2, use bitwise and."""
-    if bin(b).count("1") == 1:
+    if (b).bit_count() == 1:
         msk = b - 1
         return [a[idx] & msk for idx in range(len(a))]
     return [a[idx] % b for idx in range(len(a))]
 
+
 def weights_multiply(a: list[np.ndarray], b: int) -> list[np.ndarray]:
     """Multiply a list of weights by an integer."""
     return [a[idx] * b for idx in range(len(a))]
+
 
 def weights_divide(a: list[np.ndarray], b: int) -> list[np.ndarray]:
     """Divide a list of weights by an integer."""
     return [a[idx] / b for idx in range(len(a))]
 
 
-## Quantization ========================================================================
+# Quantization ========================================================================
+
 
 def stochastic_round(arr: np.ndarray) -> np.ndarray[np.int32]:
     """Round stochasticly the input array."""
@@ -228,7 +242,7 @@ def reverse_quantize(
     return reverse_quantized_list
 
 
-## Shamir's secret sharing  ============================================================
+# Shamir's secret sharing  ============================================================
 
 
 def create_shares(secret: bytes, threshold: int, num: int) -> list[bytes]:
@@ -294,7 +308,7 @@ def shamir_combine(shares: list[tuple[int, bytes]]) -> bytes:
     return Shamir.combine(shares)
 
 
-## Miscrellaneous ======================================================================
+# Miscrellaneous ======================================================================
 
 
 def share_keys_plaintext_concat(
@@ -308,15 +322,13 @@ def share_keys_plaintext_concat(
     source, destination = int.to_bytes(source, 4, "little"), int.to_bytes(
         destination, 4, "little"
     )
-    return b"".join(
-        [
-            source,
-            destination,
-            int.to_bytes(len(b_share), 4, "little"),
-            b_share,
-            sk_share,
-        ]
-    )
+    return b"".join([
+        source,
+        destination,
+        int.to_bytes(len(b_share), 4, "little"),
+        b_share,
+        sk_share,
+    ])
 
 
 def share_keys_plaintext_separate(plaintext: bytes) -> tuple[int, int, bytes, bytes]:
@@ -334,6 +346,7 @@ def share_keys_plaintext_separate(plaintext: bytes) -> tuple[int, int, bytes, by
 
 
 # Pseudo Bytes Generator ===============================================================
+
 
 def pseudo_rand_gen(
     seed: bytes, num_range: int, dimensions_list: list[tuple]

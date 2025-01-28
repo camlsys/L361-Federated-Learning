@@ -1,8 +1,12 @@
+# Copyright 2025 Lorenzo Sani & Alexandru-Andrei Iacob
+# SPDX-License-Identifier: Apache-2.0
+
 """Strategy for Secure Aggregation."""
 
 from logging import INFO
 import logging
-from typing import Callable, Dict, List, Optional, Tuple, Union
+from collections.abc import Callable
+from typing import Any
 from flwr.common import (
     Scalar,
     parameters_to_ndarrays,
@@ -14,7 +18,7 @@ from flwr.server.client_proxy import ClientProxy
 from flwr.server.strategy import FedAvg
 import numpy as np
 
-from common.secagg.utils import (
+from labs.common.secagg.utils import (
     SecAggStages,
     ShareKeysPacket,
     bytes_to_private_key,
@@ -41,9 +45,6 @@ from flwr.common import (
     MetricsAggregationFn,
     NDArrays,
     Parameters,
-    Scalar,
-    ndarrays_to_parameters,
-    parameters_to_ndarrays,
 )
 
 
@@ -57,25 +58,26 @@ class SecureAggregationStrategy(FedAvg):
         num_clients_per_round: int,
         threshold: float,
         num_dropouts: int,
-               fraction_fit: float = 0.0,
+        fraction_fit: float = 0.0,
         fraction_evaluate: float = 0.0,
         min_fit_clients: int = 0,
         min_evaluate_clients: int = 0,
         min_available_clients: int = 0,
-        evaluate_fn: Optional[
+        evaluate_fn: (
             Callable[
-                [int, NDArrays, Dict[str, Scalar]],
-                Optional[Tuple[float, Dict[str, Scalar]]],
+                [int, NDArrays, dict[str, Scalar]],
+                tuple[float, dict[str, Scalar]] | None,
             ]
-        ] = None,
-        on_fit_config_fn: Optional[Callable[[int], Dict[str, Scalar]]] = None,
-        on_evaluate_config_fn: Optional[Callable[[int], Dict[str, Scalar]]] = None,
+            | None
+        ) = None,
+        on_fit_config_fn: Callable[[int], dict[str, Scalar]] | None = None,
+        on_evaluate_config_fn: Callable[[int], dict[str, Scalar]] | None = None,
         accept_failures: bool = True,
-        initial_parameters: Optional[Parameters] = None,
-        fit_metrics_aggregation_fn: Optional[MetricsAggregationFn] = None,
-        evaluate_metrics_aggregation_fn: Optional[MetricsAggregationFn] = None,
+        initial_parameters: Parameters | None = None,
+        fit_metrics_aggregation_fn: MetricsAggregationFn | None = None,
+        evaluate_metrics_aggregation_fn: MetricsAggregationFn | None = None,
     ) -> None:
-        
+
         super().__init__(
             fraction_fit=fraction_fit,
             fraction_evaluate=fraction_evaluate,
@@ -90,7 +92,7 @@ class SecureAggregationStrategy(FedAvg):
             fit_metrics_aggregation_fn=fit_metrics_aggregation_fn,
             evaluate_metrics_aggregation_fn=evaluate_metrics_aggregation_fn,
         )
-        
+
         self.n_dim = n_dim
         self.sample_num = num_clients_per_round
         self.threshold = threshold
@@ -113,9 +115,13 @@ class SecureAggregationStrategy(FedAvg):
         self, server_round: int, parameters: Parameters, client_manager: ClientManager
     ) -> list[tuple[ClientProxy, FitIns]]:
         """Configure the next round of training."""
-        config = {"server_rnd": server_round, "stage": self.stage}
+        config: dict[str, Any] = {"server_rnd": server_round, "stage": self.stage}
         tmp_ret: list[tuple[ClientProxy, FitIns]] = []
-        log(logging.INFO, f"Configure fit: stage {self.stage}, {SecAggStages.STAGE_0}, {self.stage == SecAggStages.STAGE_0}")
+        log(
+            logging.INFO,
+            f"Configure fit: stage {self.stage}, {SecAggStages.STAGE_0},"
+            f" {self.stage == SecAggStages.STAGE_0}",
+        )
         if self.stage == SecAggStages.STAGE_0:
             log(logging.INFO, "Stage 0")
             config["share_num"] = self.sample_num
@@ -142,18 +148,16 @@ class SecureAggregationStrategy(FedAvg):
 
             for idx, client in self.surviving_clients.items():
                 assert idx == self.proxy2id[client]
-                tmp_ret.append(
-                    (
-                        client,
-                        FitIns(
-                            empty_parameters(),
-                            save_content(
-                                (self.forward_packet_list_dict[idx], fit_ins_lst[idx]),
-                                config.copy(),
-                            ),
+                tmp_ret.append((
+                    client,
+                    FitIns(
+                        empty_parameters(),
+                        save_content(
+                            (self.forward_packet_list_dict[idx], fit_ins_lst[idx]),
+                            config.copy(),
                         ),
-                    )
-                )
+                    ),
+                ))
         if self.stage == SecAggStages.STAGE_3:
             save_content(
                 (
@@ -213,11 +217,11 @@ class SecureAggregationStrategy(FedAvg):
                 packet_list = result
                 total_packet_list += packet_list
 
-            for idx in ask_vectors_clients.keys():
+            for idx in ask_vectors_clients:
                 forward_packet_list_dict[idx] = []
             for packet in total_packet_list:
                 destination = packet.destination
-                if destination in ask_vectors_clients.keys():
+                if destination in ask_vectors_clients:
                     forward_packet_list_dict[destination].append(packet)
             self.surviving_clients = ask_vectors_clients
             self.forward_packet_list_dict = forward_packet_list_dict
@@ -228,7 +232,8 @@ class SecureAggregationStrategy(FedAvg):
                 )
             # Get shape of vector sent by first client
             masked_vector = [np.array([0], dtype=int), np.zeros(self.n_dim, dtype=int)]
-            # Add all collected masked vectors and compuute available and dropout clients set
+            # Add all collected masked vectors and compute available and dropout
+            # clients set
             unmask_vectors_clients: dict[int, ClientProxy] = {}
             dropout_clients = self.surviving_clients.copy()
             for client, fit_res in results:
@@ -267,7 +272,7 @@ class SecureAggregationStrategy(FedAvg):
                         "Not enough shares to recover secret in unmask vectors stage"
                     )
                 secret = combine_shares(share_list)
-                if client_id in self.surviving_clients.keys():
+                if client_id in self.surviving_clients:
                     # seed is an available client's b
                     private_mask = pseudo_rand_gen(
                         secret, 1 << 24, weights_shape(masked_vector)

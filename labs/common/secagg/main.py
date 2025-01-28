@@ -1,3 +1,6 @@
+# Copyright 2025 Lorenzo Sani & Alexandru-Andrei Iacob
+# SPDX-License-Identifier: Apache-2.0
+
 """Python module to run the secure aggregation demo."""
 
 from enum import IntEnum
@@ -16,8 +19,8 @@ from flwr.server import ServerConfig, History
 import numpy as np
 import torch
 
-from common.secagg.client import get_sec_agg_client_generator
-from common.secagg.strategy import SecureAggregationStrategy
+from labs.common.secagg.client import get_sec_agg_client_generator
+from labs.common.secagg.strategy import SecureAggregationStrategy
 
 PARAMETERS = {
     "num_clients_per_round": 10,

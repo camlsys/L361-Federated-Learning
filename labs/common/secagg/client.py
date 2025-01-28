@@ -1,3 +1,6 @@
+# Copyright 2025 Lorenzo Sani & Alexandru-Andrei Iacob
+# SPDX-License-Identifier: Apache-2.0
+
 """Secure Aggregation Client Class for Flower framework."""
 
 from collections.abc import Callable
@@ -11,7 +14,7 @@ from flwr.common.logger import log
 from flwr.common.typing import Scalar, Parameters
 from flwr.client import NumPyClient
 
-from common.secagg.utils import (
+from labs.common.secagg.utils import (
     SecAggStages,
     ShareKeysPacket,
     bytes_to_private_key,
@@ -67,22 +70,22 @@ class SecureAggregationClient(NumPyClient):
         self.reload()
         stage = config.pop("stage")
         ret = 0
-        ndarrays = []
+        ndarrays_object = []
 
         if stage == SecAggStages.STAGE_0:
             ret = setup_param(self, config)
         elif stage == SecAggStages.STAGE_1:
             ret = share_keys(self, load_content(config))
         elif stage == SecAggStages.STAGE_2:
-            packet_lst, fit_ins = load_content(config)
+            packet_lst, _fit_ins = load_content(config)
             # log(INFO, f'Client {self.sec_agg_id}: \n' + str(packet_lst))
-            ndarrays = ask_vectors(self, packet_lst)
+            ndarrays_object = ask_vectors(self, packet_lst)
         elif stage == SecAggStages.STAGE_3:
             actives, dropouts = load_content(config)
             ret = unmask_vectors(self, actives, dropouts)
 
         self.cache()
-        return ndarrays, 0, save_content(ret, {})
+        return ndarrays_object, 0, save_content(ret, {})
 
     def get_vars(self) -> dict[str, Any]:
         """Return all variables of the class as a dictionary."""
@@ -175,8 +178,7 @@ def share_keys(
     # check if all public keys received are unique
     pk_list: list[bytes] = []
     for i in client.public_keys_dict.values():
-        pk_list.append(i[0])
-        pk_list.append(i[1])
+        pk_list.extend([i[0], i[1]])
     if len(set(pk_list)) != len(pk_list):
         raise Exception("Some public keys are identical")  # noqa: TRY002
 

@@ -1,13 +1,8 @@
+# Copyright 2025 Lorenzo Sani & Alexandru-Andrei Iacob
+# SPDX-License-Identifier: Apache-2.0
+
 """Module for implementing CustomClientManager solving overheads of the Criterion."""
-# @File    :   client.py
-# @Time    :   2023/01/21 11:36:46
-# @Author  :   Alexandru-Andrei Iacob
-# @Contact :   aai30@cam.ac.uk
-# @Author  :   Lorenzo Sani
-# @Contact :   ls985@cam.ac.uk, lollonasi97@gmail.com
-# @Version :   1.0
-# @License :   (C)Copyright 2023, Alexandru-Andrei Iacob, Lorenzo Sani
-# @Desc    :   None
+
 import random
 
 from logging import INFO, WARNING
@@ -26,7 +21,7 @@ class CustomClientManager(SimpleClientManager):
         self.criterion = criterion
         self.seed = seed
 
-    def sample(
+    def sample(  # type: ignore[IncompatibleMethodOverride]
         self,
         num_clients: int,
         min_num_clients: int | None = None,
@@ -42,12 +37,17 @@ class CustomClientManager(SimpleClientManager):
         cids = list(self.clients)
         # Shuffle the list of clients
         random.seed(self.seed)
+        assert server_round is not None, "server_round must not be None"
         for _ in range(server_round):
             random.shuffle(cids)
         log(INFO, "Sampling using %s", self.criterion)
         available_cids = []
         if self.criterion is not None:
-            self.criterion.current_virtual_clock = current_virtual_clock
+            assert hasattr(self.criterion, "current_virtual_clock"), (
+                "Criterion must have a current_virtual_clock attribute"
+                " to be able to sample clients."
+            )
+            self.criterion.current_virtual_clock = current_virtual_clock  # type: ignore[reportAttributeAccessIssue]
             while len(available_cids) < num_clients and len(cids) > 0:
                 cid = cids.pop()
                 if self.criterion.select(self.clients[cid]):

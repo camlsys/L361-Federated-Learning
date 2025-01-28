@@ -1,3 +1,6 @@
+# Copyright 2025 Lorenzo Sani & Alexandru-Andrei Iacob
+# SPDX-License-Identifier: Apache-2.0
+
 # Copyright 2020 Adap GmbH. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,10 +31,14 @@ PartitionedDataset = tuple[XYList, XYList]
 np.random.seed(2020)
 
 
+class DecimalDropError(Exception):
+    """Exception raised when a float to int conversion would drop decimals."""
+
+
 def float_to_int(i: float) -> int:
     """Return float as int but raise if decimal is dropped."""
     if not i.is_integer():
-        raise Exception("Cast would drop decimals")
+        raise DecimalDropError("Cast would drop decimals")
 
     return int(i)
 
@@ -42,7 +49,7 @@ def sort_by_label(x: np.ndarray, y: np.ndarray) -> XY:
     Assuming two labels and four examples the resulting label order
     would be 1,1,2,2
     """
-    idx = np.argsort(y, axis=0).reshape((y.shape[0]))
+    idx = np.argsort(y, axis=0).reshape(y.shape[0])
     return (x[idx], y[idx])
 
 
@@ -102,19 +109,21 @@ def shuffle(x: np.ndarray, y: np.ndarray) -> XY:
 
 def partition(x: np.ndarray, y: np.ndarray, num_partitions: int) -> list[XY]:
     """Return x, y as list of partitions."""
-    return list(zip(np.split(x, num_partitions), np.split(y, num_partitions)))
+    return list(
+        zip(np.split(x, num_partitions), np.split(y, num_partitions), strict=True)
+    )
 
 
 def combine_partitions(xy_list_0: XYList, xy_list_1: XYList) -> XYList:
     """Combine two lists of ndarray tuples into one list."""
     return [
         (np.concatenate([x_0, x_1], axis=0), np.concatenate([y_0, y_1], axis=0))
-        for (x_0, y_0), (x_1, y_1) in zip(xy_list_0, xy_list_1)
+        for (x_0, y_0), (x_1, y_1) in zip(xy_list_0, xy_list_1, strict=True)
     ]
 
 
 def shift(x: np.ndarray, y: np.ndarray) -> XY:
-    """Shift x_1, y_1 so that the first half contains only labels 0 to 4 and the second half 5 to 9."""
+    """Shift x_1, y_1 so that first half contains labels 0 to 4, second half 5 to 9."""
     x, y = sort_by_label(x, y)
 
     (x_0, y_0), (x_1, y_1) = split_at_fraction(x, y, fraction=0.5)
@@ -189,9 +198,9 @@ def log_distribution(xy_partitions: XYList) -> None:
 def adjust_xy_shape(xy: XY) -> XY:
     """Adjust shape of both x and y."""
     x, y = xy
-    if x.ndim == 3:
+    if x.ndim == 3:  # noqa: PLR2004
         x = adjust_x_shape(x)
-    if y.ndim == 2:
+    if y.ndim == 2:  # noqa: PLR2004
         y = adjust_y_shape(y)
     return (x, y)
 
@@ -233,10 +242,8 @@ def split_array_at_indices(
     if split_idx[0] != 0:
         raise ValueError("First value of `split_idx` must be 0.")
     if split_idx[-1] >= x.shape[0]:
-        raise ValueError(
-            """Last value in `split_idx` must be less than
-            the number of samples in `x`."""
-        )
+        raise ValueError("""Last value in `split_idx` must be less than
+            the number of samples in `x`.""")
     if not np.all(split_idx[:-1] <= split_idx[1:]):
         raise ValueError("Items in `split_idx` must be in increasing order.")
 
@@ -276,10 +283,8 @@ def exclude_classes_and_normalize(
         raise ValueError("distribution must sum to 1 and have only positive values.")
 
     if distribution.size != len(exclude_dims):
-        raise ValueError(
-            """Length of distribution must be equal
-            to the length `exclude_dims`."""
-        )
+        raise ValueError("""Length of distribution must be equal
+            to the length `exclude_dims`.""")
     if eps < 0:
         raise ValueError("""The value of `eps` must be positive and small.""")
 
@@ -364,7 +369,7 @@ def get_partitions_distributions(partitions: XYList) -> tuple[np.ndarray, list[i
     labels = set()
     for _, y in partitions:
         labels.update(set(y))
-    list_labels = sorted(list(labels))
+    list_labels = sorted(labels)
     bin_edges = np.arange(len(list_labels) + 1)
 
     # Pre-allocate distributions
@@ -384,7 +389,9 @@ def create_lda_partitions(
     accept_imbalanced: bool = False,
     seed: int | SeedSequence | BitGenerator | Generator | None = None,
 ) -> tuple[XYList, np.ndarray]:
-    r"""Create imbalanced non-iid partitions using Latent Dirichlet Allocation (LDA) without resampling.
+    r"""Create imbalanced non-iid partitions with Latent Dirichlet Allocation (LDA).
+
+    Resampling is not used.
 
     Args:
         dataset (XY): Dataset containing samples X and labels Y.
@@ -438,7 +445,7 @@ def create_lda_partitions(
     concentration = np.asarray(concentration)
 
     # Check if concentration is Inf, if so create uniform partitions
-    partitions: list[XY] = [(_, _) for _ in range(num_partitions)]
+    partitions = [(_, _) for _ in range(num_partitions)]
     if float("inf") in concentration:
 
         partitions = create_partitions(
@@ -468,13 +475,13 @@ def create_lda_partitions(
             alpha=concentration, size=num_partitions
         )
 
-    if dirichlet_dist.size != 0:
-        if dirichlet_dist.shape != (num_partitions, classes.size):
-            raise ValueError(
-                f"""The shape of the provided dirichlet distribution
-                 ({dirichlet_dist.shape}) must match the provided number
-                  of partitions and classes ({num_partitions},{classes.size})"""
-            )
+    if dirichlet_dist.size != 0 and dirichlet_dist.shape != (
+        num_partitions,
+        classes.size,
+    ):
+        raise ValueError(f"""The shape of the provided dirichlet distribution
+                ({dirichlet_dist.shape}) must match the provided number
+                of partitions and classes ({num_partitions},{classes.size})""")
 
     # Assuming balanced distribution
     empty_classes = classes.size * [False]
