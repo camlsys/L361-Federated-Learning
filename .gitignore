@@ -161,7 +161,6 @@ cython_debug/
 
 
 # FEMNIST dataset
-*femnist.tar.gz
 *femnist
 device_info.tar.gz
 device_info
