@@ -1,14 +1,7 @@
-"""Client utilities for the FEMNIST dataset."""
+# Copyright 2025 Lorenzo Sani & Alexandru-Andrei Iacob
+# SPDX-License-Identifier: Apache-2.0
 
-# @File    :   client.py
-# @Time    :   2023/01/21 11:36:46
-# @Author  :   Alexandru-Andrei Iacob
-# @Contact :   aai30@cam.ac.uk
-# @Author  :   Lorenzo Sani
-# @Contact :   ls985@cam.ac.uk
-# @Version :   1.0
-# @License :   (C) Copyright 2025, Alexandru-Andrei Iacob, Lorenzo Sani
-# @Desc    :   None
+"""Client utilities for the FEMNIST dataset."""
 
 import logging
 import numbers
@@ -28,11 +21,13 @@ from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
 from tqdm import tqdm
 
-from common.femnist_dataset import FEMNIST
+from labs.common.femnist_dataset import FEMNIST
 from flwr.common.logger import log
+
 
 class IntentionalDropoutError(BaseException):
     """For clients to intentionally drop out of the federated learning process."""
+
 
 def get_device() -> str:
     """
@@ -65,9 +60,7 @@ def to_tensor_transform(p: Any) -> torch.Tensor:
     return torch.tensor(p)
 
 
-def load_femnist_dataset(
-    data_dir: Path, mapping: Path, name: str
-) -> Dataset:
+def load_femnist_dataset(data_dir: Path, mapping: Path, name: str) -> Dataset:
     """Load the FEMNIST dataset given the mapping .csv file.
 
     The relevant transforms are automatically applied.
