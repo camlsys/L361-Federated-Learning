@@ -1,0 +1,186 @@
+[build-system]
+requires = ["poetry-core>=1.4.0"]
+build-backend = "poetry.masonry.api"
+
+[project]
+name = "labs" # Do not change this
+version = "2.0.0"
+description = "L361 Federated Learning"
+readme = "README.md"
+license = "Apache-2.0"
+dynamic = ["classifiers", "dependencies", "requires-python"]
+authors = [
+    { name = "Lorenzo Sani", email = "ls985@cam.ac.uk" },
+    { name = "Alexandru-Andrei Iacob", email = "aai30@cam.ac.uk" },
+]
+
+[tool.poetry.dependencies]
+python = "3.10.12"  # don't change this: same version as in Google Colab
+flwr = { git = "https://github.com/Iacob-Alexandru-Andrei/flower.git", branch = "teaching" }
+hydra-core = "1.3.2" # don't change this
+torch = {url = "https://download.pytorch.org/whl/cpu/torch-2.1.2-cp310-none-macosx_11_0_arm64.whl"}
+torchaudio = {url = "https://download.pytorch.org/whl/cpu/torchaudio-2.1.2-cp310-cp310-macosx_11_0_arm64.whl"}
+torchvision = {url = "https://download.pytorch.org/whl/cpu/torchvision-0.16.2-cp310-cp310-macosx_11_0_arm64.whl"}
+types-protobuf = "4.24.0.4"
+types-pyyaml = "6.0.12.12"
+types-decorator = "5.1.8.4"
+types-setuptools = "68.2.0.0"
+wandb = "0.16.0"
+pyarrow = "14.0.1"
+multiprocess = "0.70.15"
+nvsmi = "0.4.2"
+transformers = "^4.36.2"
+cloudpickle = "3.0.0"
+tqdm = "4.66.1"
+pandas = "2.1.2"
+scipy = "1.11.3"
+librosa = "0.10.1"
+nvidia-ml-py = "11.495.46"
+ipykernel = "6.26.0"
+matplotlib = "3.8.1"
+seaborn = "0.13.0"
+jupyter-server = "2.10.0"
+ipywidgets = "8.1.1"
+ipython = "8.17.2"
+gdown = "4.7.1"
+pydantic = "<2.0.0"
+pre-commit = "3.5.0"
+identify = "2.5.31"
+datasets = "^2.15.0"
+dahuffman = "^0.4.1"
+opencv-python = "^4.8.1.78"
+jupyter = "^1.0.0"
+
+
+[tool.poetry.group.dev.dependencies]
+black = { version = "==23.1.0", extras = ["jupyter"] }
+docformatter = "==1.7.5"
+mypy = "==1.6.1"
+ruff = "==0.1.6"
+pylint = "==2.8.2"
+flake8 = "==3.9.2"
+pytest = "==6.2.4"
+pytest-watch = "==4.2.0"
+types-requests = "==2.27.7"
+yamlfix = "1.15.0"
+
+[tool.black]
+line-length = 88
+target-version = ["py311"]
+
+[tool.mypy]
+ignore_missing_imports = true
+strict = false
+plugins = "numpy.typing.mypy_plugin"
+
+[tool.pylint."MESSAGES CONTROL"]
+disable = "bad-continuation,duplicate-code,too-few-public-methods,useless-import-alias,import-error,no-member,no-name-in-module"
+good-names = "f,i,j,k,_,x,y,X,Y"
+signature-mutators="hydra.main.main"
+
+[tool.pylint.typecheck]
+generated-members="numpy.*, torch.*, tensorflow.*"
+
+[[tool.mypy.overrides]]
+module = [
+    "importlib.metadata.*",
+    "importlib_metadata.*",
+]
+follow_imports = "skip"
+follow_imports_for_stubs = true
+disallow_untyped_calls = false
+
+[[tool.mypy.overrides]]
+module = "torch.*"
+follow_imports = "skip"
+follow_imports_for_stubs = true
+
+[[tool.mypy.overrides]]
+module = "ray.*"
+follow_imports = "skip"
+follow_imports_for_stubs = true
+
+[tool.docformatter]
+wrap-summaries = 88
+wrap-descriptions = 88
+
+[tool.yamlfix]
+allow_duplicate_keys = false
+line_length = 88
+none_representation = "null"
+whitelines = 1
+section_whitelines = 1
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+    "proto",
+    "outputs",
+    "wandb",
+    "multirun",
+]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 88
+select = ["A", "D", "E", "F", "W", "B", "ISC", "N", "ANN",
+"C4", "UP", "COM", "EXE", "FA", "ISC", "ICN", "INP", "PIE", "T20", 
+"Q", "RET", "SLOT", "SIM", "TID", "ARG", "PTH", "TD", "PD", "PGH", 
+"PL", "TRY","NPY", "PERF", "FURB", "RUF" ]
+fixable = ["A", "D", "E", "F", "W", "B", "ISC", "N", "ANN", 
+"C4", "UP", "COM", "EXE", "FA", "ISC", "ICN", "INP", "PIE", "T20",
+"Q", "RET", "SLOT", "SIM", "TCH", "ARG", "PTH", "TD", "PD", "PGH",
+"PL", "TRY", "NPY", "PERF", "FURB", "RUF"]
+ignore = ["B024", "B027", "PLE1205", "PLE1206", "PLR0904",
+"PLR0911" , "PLR0912", "PLR0913", "PLR0915", "PLR0916", "PERF203",
+"PERF401","PERF403", "ANN101", "ANN102", "ANN401", "PLR6301",
+"ARG002", "TRY003", "PTH123", "TD002","TD003", "ARG001",
+"ARG002", "ARG003", "ARG004", "RET505", "N812", "RET504", 
+"PLW2901", "NPY002", "COM812", "ISC001", "RUF005"]
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+    "proto",
+]
+
+[tool.ruff.format]
+quote-style = "double"
+preview = true
+
+[tool.ruff.pydocstyle]
+convention = "numpy"

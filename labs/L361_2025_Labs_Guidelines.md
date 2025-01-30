@@ -12,7 +12,9 @@ Try to inspect the coursework for a Lab in advance.
 The next Lab will be made available on this repository in advance to allow for preparation.
 It is expected to complete the coursework in the Lab session and in your own time (1 hour may not be enough depending on the student's ability).
 
-The Labs are designed to be completed in Python using Google Colab Notebooks.
+The Labs are designed to be completed in Python using LightningAI sessions or your personal machine.
+We recommend forking this repository and cloning it to the machine you will be using.
+Be aware that some resources have to be downloaded with `git lfs` (Large File Storage).
 It is expected to use some sort of computing resources even though, in most cases, the Labs can be completed on a laptop.
 Questions are embedded within the Notebooks and the answer must be put after them clearly visible.
 Please, try to respect further potential guidelines provided in the Lab Notebooks.
