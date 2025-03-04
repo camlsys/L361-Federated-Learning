@@ -8,7 +8,7 @@ Read the documentation carefully and reach out to the Teaching Assistants for fu
 ## Marking and Guidelines
 
 The final project is worth **50%** of the total grade for the course.
-The Final Project is due 15th March @ 12 pm; materials made public (unless you opt-out).
+The Final Project is due on the 21st March @ 12 pm; materials made public (unless you opt-out).
 Deliverables for the Final Project are: Code + Report + Recorded Talk.
 The talk is optional for Part II.
 Separate project guidelines are provided for each cohort in this repository.
